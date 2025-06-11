@@ -1,6 +1,5 @@
 from typer.testing import CliRunner
 import json
-from pathlib import Path
 from mycli.cli import app
 
 
