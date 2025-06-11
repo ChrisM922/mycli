@@ -6,13 +6,14 @@ from pathlib import Path
 app = typer.Typer(help="A simple to-do CLI")
 
 def get_storage_path() -> Path:
-    # First look for MYCLI_STORAGE_FILE, then MYCLI_STORAGE, then default
-    env_file = os.getenv("MYCLI_STORAGE_FILE") or os.getenv("MYCLI_STORAGE")
-    if env_file:
-        return Path(env_file)
+    # Allow override via environment, default to ~/.mycli/tasks.json
+    env_path = os.getenv("MYCLI_STORAGE_FILE") or os.getenv("MYCLI_STORAGE")
+    if env_path:
+        return Path(env_path)
     default_dir = Path.home() / ".mycli"
     default_dir.mkdir(parents=True, exist_ok=True)
     return default_dir / "tasks.json"
+
 
 def load_tasks() -> list[dict]:
     path = get_storage_path()
@@ -20,12 +21,13 @@ def load_tasks() -> list[dict]:
         return []
     try:
         data = json.loads(path.read_text())
-        # migrate old string-list format
+        # Normalize old format (list of strings) to new dict format
         if data and isinstance(data[0], str):
             return [{"text": t, "completed": False} for t in data]
         return data
     except json.JSONDecodeError:
         return []
+
 
 def save_tasks(tasks: list[dict]):
     path = get_storage_path()
@@ -57,7 +59,7 @@ def _list():
     tasks = load_tasks()
     if not tasks:
         typer.echo("No tasks found.")
-        raise typer.Exit()
+        raise typer.Exit(code=0)
     for i, task in enumerate(tasks, start=1):
         if task.get("completed"):
             typer.echo(f"{i}. [x] {task['text']}")
@@ -80,15 +82,15 @@ def done(index: int):
 @app.command()
 def remove(index: int):
     """
-    Remove a task by its number.
+    Remove a to-do task by its number.
     """
     tasks = load_tasks()
     if index < 1 or index > len(tasks):
         typer.echo(f"Error: task {index} does not exist.")
         raise typer.Exit(code=1)
-    removed_task = tasks.pop(index-1)
+    removed = tasks.pop(index-1)
     save_tasks(tasks)
-    typer.echo(f"Removed task: {removed_task['text']}")
+    typer.echo(f"Removed task {index}: {removed['text']}")
 
 if __name__ == "__main__":
     app()
