@@ -3,17 +3,21 @@ import json
 from pathlib import Path
 from mycli.cli import app
 
+
 runner = CliRunner()
+
 
 def test_hello():
     result = runner.invoke(app, ["hello", "World"])
     assert result.exit_code == 0
     assert "Hello, World!" in result.output
 
+
 def test_add():
     result = runner.invoke(app, ["add", "Buy milk"])
     assert result.exit_code == 0
     assert "Added task: Buy milk" in result.output
+
 
 def test_list_empty(tmp_path, monkeypatch):
     storage_file = tmp_path / "tasks.json"
@@ -21,6 +25,7 @@ def test_list_empty(tmp_path, monkeypatch):
     result = runner.invoke(app, ["list"])
     assert result.exit_code == 0
     assert "No tasks found." in result.output
+
 
 def test_add_and_list(tmp_path, monkeypatch):
     storage_file = tmp_path / "tasks.json"
@@ -32,6 +37,7 @@ def test_add_and_list(tmp_path, monkeypatch):
     result = runner.invoke(app, ["list"])
     assert result.exit_code == 0
     assert "1. Do laundry" in result.output
+
 
 def test_remove_single_task(tmp_path, monkeypatch):
     storage_file = tmp_path / "tasks.json"
@@ -50,6 +56,7 @@ def test_remove_single_task(tmp_path, monkeypatch):
     assert result.exit_code == 0
     assert "No tasks found." in result.output
 
+
 def test_mark_done(tmp_path, monkeypatch):
     storage_file = tmp_path / "tasks.json"
     monkeypatch.setenv("MYCLI_STORAGE_FILE", str(storage_file))
@@ -59,6 +66,7 @@ def test_mark_done(tmp_path, monkeypatch):
     result = runner.invoke(app, ["done", "1"])
     assert result.exit_code == 0
     assert "Marked task 1 as done." in result.output
+
 
 def test_list_shows_complete(tmp_path, monkeypatch):
     storage_file = tmp_path / "tasks.json"
