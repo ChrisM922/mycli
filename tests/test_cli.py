@@ -30,7 +30,6 @@ def test_list_empty(tmp_path, monkeypatch):
 def test_add_and_list(tmp_path, monkeypatch):
     storage_file = tmp_path / "tasks.json"
     monkeypatch.setenv("MYCLI_STORAGE_FILE", str(storage_file))
-    
     # Add a task
     runner.invoke(app, ["add", "Do laundry"])
     # List tasks
@@ -42,15 +41,12 @@ def test_add_and_list(tmp_path, monkeypatch):
 def test_remove_single_task(tmp_path, monkeypatch):
     storage_file = tmp_path / "tasks.json"
     monkeypatch.setenv("MYCLI_STORAGE_FILE", str(storage_file))
-    
     # Add a task
     runner.invoke(app, ["add", "Clean the house"])
-    
     # Remove the task
     tasks = json.loads(storage_file.read_text())
     tasks.pop(0)  # Simulate removing the first task
     storage_file.write_text(json.dumps(tasks, indent=2))
-    
     # List tasks
     result = runner.invoke(app, ["list"])
     assert result.exit_code == 0
