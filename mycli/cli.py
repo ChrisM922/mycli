@@ -1,14 +1,96 @@
 import typer
+import os
+import json
+from pathlib import Path
 
-app = typer.Typer()
+app = typer.Typer(help="A simple to-do CLI")
+
+def get_storage_path() -> Path:
+    # Allow override via environment, default to ~/.mycli/tasks.json
+    env_path = os.getenv("MYCLI_STORAGE_FILE") or os.getenv("MYCLI_STORAGE")
+    if env_path:
+        return Path(env_path)
+    default_dir = Path.home() / ".mycli"
+    default_dir.mkdir(parents=True, exist_ok=True)
+    return default_dir / "tasks.json"
+
+
+def load_tasks() -> list[dict]:
+    path = get_storage_path()
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text())
+        # Normalize old format (list of strings) to new dict format
+        if data and isinstance(data[0], str):
+            return [{"text": t, "completed": False} for t in data]
+        return data
+    except json.JSONDecodeError:
+        return []
+
+
+def save_tasks(tasks: list[dict]):
+    path = get_storage_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(tasks, indent=2))
 
 @app.command()
-
 def hello(name: str):
     """
-    Greet the user with the provided name.
+    Say hello.
     """
     typer.echo(f"Hello, {name}!")
+
+@app.command()
+def add(task: str):
+    """
+    Add a to-do task.
+    """
+    tasks = load_tasks()
+    tasks.append({"text": task, "completed": False})
+    save_tasks(tasks)
+    typer.echo(f"Added task: {task}")
+
+@app.command(name="list")
+def _list():
+    """
+    List all to-do tasks.
+    """
+    tasks = load_tasks()
+    if not tasks:
+        typer.echo("No tasks found.")
+        raise typer.Exit(code=0)
+    for i, task in enumerate(tasks, start=1):
+        if task.get("completed"):
+            typer.echo(f"{i}. [x] {task['text']}")
+        else:
+            typer.echo(f"{i}. {task['text']}")
+
+@app.command()
+def done(index: int):
+    """
+    Mark a task as done by its number.
+    """
+    tasks = load_tasks()
+    if index < 1 or index > len(tasks):
+        typer.echo(f"Error: task {index} does not exist.")
+        raise typer.Exit(code=1)
+    tasks[index-1]["completed"] = True
+    save_tasks(tasks)
+    typer.echo(f"Marked task {index} as done.")
+
+@app.command()
+def remove(index: int):
+    """
+    Remove a to-do task by its number.
+    """
+    tasks = load_tasks()
+    if index < 1 or index > len(tasks):
+        typer.echo(f"Error: task {index} does not exist.")
+        raise typer.Exit(code=1)
+    removed = tasks.pop(index-1)
+    save_tasks(tasks)
+    typer.echo(f"Removed task {index}: {removed['text']}")
 
 if __name__ == "__main__":
     app()
