@@ -9,7 +9,7 @@
 1. Clone the repository
 
    ```bash
-   git clone https://github.com/YourUsername/mycli.git
+   git clone https://github.com/ChrisM922/mycli.git
    cd mycli
    ```
 
@@ -18,7 +18,7 @@
    ```bash
    python -m venv venv
    source venv/bin/activate      # macOS/Linux
-   .\venv\Scripts\Activate.ps1 # Windows PowerShell
+   .\venv\Scripts\activate       # Windows PowerShell
    ```
 
 3. Install dependencies
