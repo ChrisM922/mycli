@@ -3,6 +3,8 @@ import os
 import json
 from pathlib import Path
 
+## A simple to-do CLI application using Typer
+# This script provides commands to manage a to-do list, including adding, listing,
 
 app = typer.Typer(help="A simple to-do CLI")
 
